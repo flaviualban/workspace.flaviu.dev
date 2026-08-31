@@ -12,6 +12,7 @@ import asyncio
 from dns_tool import analyze as dns_analyze
 import imap_tool
 import cpanel_tool
+import ssl_tool
 
 
 ROOT_DIR = Path(__file__).parent
@@ -152,6 +153,21 @@ async def cpanel_status(job_id: str):
 @api_router.post("/tools/cpanel/cancel/{job_id}")
 async def cpanel_cancel(job_id: str):
     return {"cancelled": cpanel_tool.cancel_job(job_id)}
+
+
+class SslCheckRequest(BaseModel):
+    domains: list[str]
+
+
+@api_router.post("/tools/ssl/check")
+async def ssl_check(payload: SslCheckRequest):
+    domains = [d for d in (payload.domains or []) if d.strip()][:12]
+    if not domains:
+        return {"results": []}
+    loop = asyncio.get_event_loop()
+    tasks = [loop.run_in_executor(_executor, ssl_tool.check_domain, d) for d in domains]
+    results = await asyncio.gather(*tasks)
+    return {"results": results}
 
 
 # Include the router in the main app

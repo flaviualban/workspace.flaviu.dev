@@ -7,6 +7,7 @@ import { Dashboard } from "@/components/workspace/Dashboard";
 import { DnsLookupPage } from "@/components/workspace/DnsLookupPage";
 import { ImapSyncPage } from "@/components/workspace/ImapSyncPage";
 import { CpanelMigratePage } from "@/components/workspace/CpanelMigratePage";
+import { SslHealthPage } from "@/components/workspace/SslHealthPage";
 
 const STORAGE_KEY = "flaviu_workspace_key";
 
@@ -37,6 +38,7 @@ function App() {
           <Route path="/tools/dns" element={<DnsLookupPage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="/tools/imap" element={<ImapSyncPage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="/tools/cpanel" element={<CpanelMigratePage sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="/tools/ssl" element={<SslHealthPage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

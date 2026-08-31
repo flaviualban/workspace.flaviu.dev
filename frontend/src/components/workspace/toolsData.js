@@ -43,8 +43,9 @@ export const TOOLS = [
     title: "SSL & Domain Health",
     romanianTitle: "Monitorizare SSL & Domenii",
     category: "Security",
-    status: "Soon",
+    status: "Ready",
     icon: ShieldCheck,
+    route: "/tools/ssl",
     description:
       "Inspectează expirarea certificatelor SSL, statusul OCSP stapling și benchmark-uri handshake HTTP/2.",
   },
