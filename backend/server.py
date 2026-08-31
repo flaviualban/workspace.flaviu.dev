@@ -7,6 +7,10 @@ import logging
 from pathlib import Path
 from pydantic import BaseModel
 import hmac
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
+from dns_tool import analyze as dns_analyze
+import imap_tool
 
 
 ROOT_DIR = Path(__file__).parent
@@ -44,6 +48,67 @@ async def verify_key(payload: KeyVerifyRequest):
     submitted = (payload.key or "").replace("-", "").strip()
     valid = bool(WORKSPACE_KEY) and hmac.compare_digest(submitted, WORKSPACE_KEY)
     return KeyVerifyResponse(valid=valid)
+
+
+class DnsLookupRequest(BaseModel):
+    domain: str
+
+
+_executor = ThreadPoolExecutor(max_workers=4)
+
+
+@api_router.post("/tools/dns-lookup")
+async def dns_lookup(payload: DnsLookupRequest):
+    raw = (payload.domain or "").strip().lower()
+    raw = raw.replace("https://", "").replace("http://", "")
+    domain = raw.split("/")[0].split("?")[0]
+    if not domain or "." not in domain:
+        return {"error": "Introdu un domeniu valid (ex: flaviu.dev)."}
+    loop = asyncio.get_event_loop()
+    try:
+        result = await loop.run_in_executor(_executor, dns_analyze, domain)
+        return result
+    except Exception as e:
+        logger.exception("dns lookup failed")
+        return {"error": f"Analiza DNS a eșuat: {e}"}
+
+
+class ImapAccount(BaseModel):
+    host: str
+    port: int = 993
+    email: str
+    password: str
+    ssl: bool = True
+
+
+class ImapSyncRequest(BaseModel):
+    source: ImapAccount
+    dest: ImapAccount
+
+
+@api_router.post("/tools/imap/test")
+async def imap_test(account: ImapAccount):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(_executor, imap_tool.test_connection, account.model_dump())
+
+
+@api_router.post("/tools/imap/start")
+async def imap_start(payload: ImapSyncRequest):
+    job_id = imap_tool.start_job(payload.source.model_dump(), payload.dest.model_dump())
+    return {"job_id": job_id}
+
+
+@api_router.get("/tools/imap/status/{job_id}")
+async def imap_status(job_id: str):
+    job = imap_tool.get_status(job_id)
+    if not job:
+        return {"error": "Job inexistent."}
+    return {k: v for k, v in job.items() if k != "cancel"}
+
+
+@api_router.post("/tools/imap/cancel/{job_id}")
+async def imap_cancel(job_id: str):
+    return {"cancelled": imap_tool.cancel_job(job_id)}
 
 
 # Include the router in the main app

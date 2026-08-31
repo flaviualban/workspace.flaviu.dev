@@ -1,40 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "@/App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "@/components/workspace/LoginPage";
 import { LoadingScreen } from "@/components/workspace/LoadingScreen";
 import { Dashboard } from "@/components/workspace/Dashboard";
+import { DnsLookupPage } from "@/components/workspace/DnsLookupPage";
+import { ImapSyncPage } from "@/components/workspace/ImapSyncPage";
 
 const STORAGE_KEY = "flaviu_workspace_key";
 
 function App() {
-  const [stage, setStage] = useState("login"); // login | loading | dashboard
-  const [sessionKey, setSessionKey] = useState("");
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setSessionKey(stored);
-      setStage("dashboard");
-    }
-  }, []);
+  const [sessionKey, setSessionKey] = useState(() => sessionStorage.getItem(STORAGE_KEY) || "");
+  const [phase, setPhase] = useState(() => (sessionStorage.getItem(STORAGE_KEY) ? "ready" : "login"));
 
   const handleSuccess = (key) => {
     setSessionKey(key);
     sessionStorage.setItem(STORAGE_KEY, key);
-    setStage("loading");
+    setPhase("loading");
   };
 
   const handleLock = () => {
     sessionStorage.removeItem(STORAGE_KEY);
     setSessionKey("");
-    setStage("login");
+    setPhase("login");
   };
+
+  if (phase === "login") return <div className="App"><LoginPage onSuccess={handleSuccess} /></div>;
+  if (phase === "loading") return <div className="App"><LoadingScreen onDone={() => setPhase("ready")} /></div>;
 
   return (
     <div className="App">
-      {stage === "login" && <LoginPage onSuccess={handleSuccess} />}
-      {stage === "loading" && <LoadingScreen onDone={() => setStage("dashboard")} />}
-      {stage === "dashboard" && <Dashboard sessionKey={sessionKey} onLock={handleLock} />}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Dashboard sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="/tools/dns" element={<DnsLookupPage sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="/tools/imap" element={<ImapSyncPage sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }

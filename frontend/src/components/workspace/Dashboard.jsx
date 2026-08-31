@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TOOLS } from "./toolsData";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -6,6 +7,7 @@ import { Lock, ArrowUpRight, Activity, Wrench, Clock } from "lucide-react";
 
 export const Dashboard = ({ sessionKey, onLock }) => {
   const [active, setActive] = useState(null);
+  const navigate = useNavigate();
   const masked = sessionKey
     ? `${sessionKey.slice(0, 4)}${"•".repeat(12)}`
     : "••••••••••••••••";
@@ -73,7 +75,7 @@ export const Dashboard = ({ sessionKey, onLock }) => {
               <motion.button
                 key={tool.id}
                 data-testid={tool.testId}
-                onClick={() => setActive(tool)}
+                onClick={() => (tool.route ? navigate(tool.route) : setActive(tool))}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}

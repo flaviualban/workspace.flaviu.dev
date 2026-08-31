@@ -9,6 +9,7 @@ export const TOOLS = [
     category: "Network & Domain",
     status: "Ready",
     icon: Network,
+    route: "/tools/dns",
     description:
       "Interoghează live înregistrările zonei DNS (A, AAAA, MX, CNAME, TXT, NS, SOA) pentru orice domeniu, cu parsare TTL.",
   },
@@ -20,6 +21,7 @@ export const TOOLS = [
     category: "Email Migration",
     status: "Ready",
     icon: MailCheck,
+    route: "/tools/imap",
     description:
       "Sincronizează căsuțele poștale între două conturi IMAP, cu mapare foldere, comparație delta și log de progres.",
   },
