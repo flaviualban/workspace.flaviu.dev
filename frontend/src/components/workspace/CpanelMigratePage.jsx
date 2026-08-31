@@ -69,6 +69,7 @@ export const CpanelMigratePage = ({ onLock }) => {
   const [job, setJob] = useState(null);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
+  const [method, setMethod] = useState("archive");
   const pollRef = useRef(null);
   const logEndRef = useRef(null);
 
@@ -117,6 +118,7 @@ export const CpanelMigratePage = ({ onLock }) => {
         source: { ...source, port: Number(source.port) || 21 },
         dest: { ...dest, port: Number(dest.port) || 21 },
         folders: chosen,
+        method,
       };
       const res = await axios.post(`${API}/tools/cpanel/start`, payload);
       if (res.data.error) setError(res.data.error);
@@ -127,12 +129,23 @@ export const CpanelMigratePage = ({ onLock }) => {
 
   const cancel = async () => { if (jobId) await axios.post(`${API}/tools/cpanel/cancel/${jobId}`).catch(() => {}); };
 
-  const pct = job && job.total > 0 ? Math.round((job.done / job.total) * 100) : 0;
+  const isArchive = job?.mode === "archive";
+  let pct = 0;
+  if (job) {
+    if (isArchive) {
+      pct = job.bytes_total > 0
+        ? Math.round((job.bytes_done / job.bytes_total) * 100)
+        : (job.folders_total > 0 ? Math.round((job.folders_done / job.folders_total) * 100) : 0);
+    } else {
+      pct = job.total > 0 ? Math.round((job.done / job.total) * 100) : 0;
+    }
+  }
   const statusLabel = {
     queued: "În așteptare", connecting: "Conectare", scanning: "Scanare fișiere",
-    transferring: "Migrare în curs", done: "Finalizat", error: "Eroare",
+    compressing: "Comprimare", downloading: "Descărcare", uploading: "Încărcare",
+    extracting: "Dezarhivare", transferring: "Migrare în curs", done: "Finalizat", error: "Eroare",
   };
-  const mb = (b) => (b / 1048576).toFixed(1);
+  const mb = (b) => ((b || 0) / 1048576).toFixed(1);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -224,6 +237,22 @@ export const CpanelMigratePage = ({ onLock }) => {
           <div className="mb-6">
             <div className="font-mono text-[10px] tracking-widest text-slate-400 uppercase mb-3">Pasul 3 — Destinație & migrare</div>
             <AccountForm title="Contul destinație" label="DESTINATION" value={dest} onChange={setDest} testPrefix="cpanel-dest" />
+
+            <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-5">
+              <div className="text-xs font-medium text-slate-500 mb-3">Metodă de transfer</div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <button data-testid="cpanel-method-archive" onClick={() => setMethod("archive")}
+                  className={`text-left rounded-xl border p-4 transition-colors duration-200 ${method === "archive" ? "border-sky-500 bg-sky-50/50" : "border-slate-200 hover:border-slate-300"}`}>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><FolderSync className="w-4 h-4 text-sky-600" /> Arhivă (recomandat)</div>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">Comprimă pe sursă → transferă o singură arhivă → dezarhivează. Ideal pentru WordPress cu mii de fișiere.</p>
+                </button>
+                <button data-testid="cpanel-method-files" onClick={() => setMethod("files")}
+                  className={`text-left rounded-xl border p-4 transition-colors duration-200 ${method === "files" ? "border-sky-500 bg-sky-50/50" : "border-slate-200 hover:border-slate-300"}`}>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Folder className="w-4 h-4 text-slate-500" /> Fișier cu fișier</div>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">Copiază fiecare fișier individual prin FTP. Mai lent, dar nu necesită acces la File Manager API.</p>
+                </button>
+              </div>
+            </div>
             <div className="flex gap-3 mt-4">
               <button data-testid="cpanel-start-button" onClick={start} disabled={!dstValid || !chosen.length || running || starting}
                 className="flex items-center gap-2 bg-slate-900 text-white font-semibold text-sm rounded-xl px-7 py-3.5 transition-colors duration-200 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed">
@@ -258,8 +287,18 @@ export const CpanelMigratePage = ({ onLock }) => {
                 {job.current && <span className="flex items-center gap-1 font-mono text-xs text-slate-400 truncate max-w-xs"><Folder className="w-3.5 h-3.5" /> {job.current}</span>}
               </div>
               <div className="font-mono text-xs text-slate-500" data-testid="cpanel-progress-count">
-                {job.done} / {job.total} fișiere · <HardDrive className="w-3 h-3 inline" /> {mb(job.done_bytes)}/{mb(job.total_bytes)} MB
-                {job.skipped > 0 && ` · ${job.skipped} sărite`}
+                {isArchive ? (
+                  <>
+                    Folder {job.folders_done}/{job.folders_total}
+                    {job.phase && ` · ${job.phase}`}
+                    {job.bytes_total > 0 && <> · <HardDrive className="w-3 h-3 inline" /> {mb(job.bytes_done)}/{mb(job.bytes_total)} MB</>}
+                  </>
+                ) : (
+                  <>
+                    {job.done} / {job.total} fișiere · <HardDrive className="w-3 h-3 inline" /> {mb(job.done_bytes)}/{mb(job.total_bytes)} MB
+                    {job.skipped > 0 && ` · ${job.skipped} sărite`}
+                  </>
+                )}
               </div>
             </div>
             <div className="px-6 py-5">

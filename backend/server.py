@@ -124,6 +124,7 @@ class CpanelStartRequest(BaseModel):
     source: CpanelAccount
     dest: CpanelAccount
     folders: list[str]
+    method: str = "archive"
 
 
 @api_router.post("/tools/cpanel/scan")
@@ -136,7 +137,7 @@ async def cpanel_scan(account: CpanelAccount):
 async def cpanel_start(payload: CpanelStartRequest):
     if not payload.folders:
         return {"error": "Selectează cel puțin un folder."}
-    job_id = cpanel_tool.start_job(payload.source.model_dump(), payload.dest.model_dump(), payload.folders)
+    job_id = cpanel_tool.start_job(payload.source.model_dump(), payload.dest.model_dump(), payload.folders, payload.method)
     return {"job_id": job_id}
 
 

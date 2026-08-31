@@ -114,6 +114,45 @@ def list_databases(cfg):
     return {"ok": False, "error": "Nu am putut contacta cPanel UAPI (port 2083)."}
 
 
+def _api2_fileop(cfg, op, sourcefiles, destfiles=None, metadata=None, timeout=1800):
+    host = cfg["host"].strip()
+    user = cfg["user"].strip()
+    pw = cfg["password"]
+    url = f"https://{host}:2083/json-api/cpanel"
+    params = {
+        "cpanel_jsonapi_apiversion": "2",
+        "cpanel_jsonapi_module": "Fileman",
+        "cpanel_jsonapi_func": "fileop",
+        "op": op,
+        "sourcefiles": sourcefiles,
+        "doubledecode": "0",
+    }
+    if destfiles is not None:
+        params["destfiles"] = destfiles
+    if metadata is not None:
+        params["metadata"] = metadata
+    r = requests.post(url, auth=(user, pw), params=params, verify=False, timeout=timeout)
+    if r.status_code != 200:
+        return {"ok": False, "error": f"cPanel API a răspuns {r.status_code}"}
+    try:
+        data = r.json()
+    except Exception:
+        return {"ok": False, "error": "Răspuns cPanel invalid (verifică portul 2083 / credențialele)."}
+    res = data.get("cpanelresult", data)
+    err = res.get("error")
+    rows = res.get("data") or []
+    if err:
+        return {"ok": False, "error": _clean(err)}
+    for row in rows:
+        if isinstance(row, dict) and str(row.get("result", "1")) == "0":
+            return {"ok": False, "error": _clean(row.get("reason") or "operație eșuată")}
+    return {"ok": True, "data": rows}
+
+
+def _home_files(ftp, home):
+    return {name for name, is_dir in _list_dir(ftp, home) if not is_dir}
+
+
 def scan(source):
     """Scan the cPanel home directory: top-level folders + database list."""
     result = {"home": "", "folders": [], "databases": [], "db_note": ""}
@@ -248,15 +287,131 @@ def run_migration(job_id, source, dest, folders):
                 pass
 
 
-def start_job(source, dest, folders):
+def run_migration_archive(job_id, source, dest, folders):
+    job = JOBS[job_id]
+    src = dst = None
+    try:
+        job["start_ts"] = time.time()
+        job["status"] = "connecting"
+        _log(job, f"Conectare FTP sursă {source['host']}...")
+        src = _ftp_connect(source)
+        src_home = src.pwd().rstrip("/")
+        _log(job, f"Conectare FTP destinație {dest['host']}...")
+        dst = _ftp_connect(dest)
+        dst_home = dst.pwd().rstrip("/")
+
+        for idx, folder in enumerate(folders):
+            if job.get("cancel"):
+                raise RuntimeError("Anulat de utilizator.")
+            job["current"] = folder
+            job["folders_done"] = idx
+
+            # 1) compress on source
+            job["status"] = "compressing"
+            job["phase"] = "Comprimare pe sursă"
+            job["bytes_total"] = 0
+            job["bytes_done"] = 0
+            _log(job, f"[{folder}] Comprim pe server (tar.gz)...")
+            before = _home_files(src, src_home)
+            res = _api2_fileop(source, "compress", f"{src_home}/{folder}", metadata="tar.gz")
+            if not res.get("ok"):
+                _log(job, f"[{folder}] Comprimare eșuată: {res.get('error')}")
+                continue
+            after = _home_files(src, src_home)
+            new_files = [f for f in (after - before)
+                         if f.endswith((".tar.gz", ".tgz", ".zip", ".tar"))]
+            if not new_files:
+                cand = f"{folder}.tar.gz"
+                new_files = [cand] if cand in after else []
+            if not new_files:
+                _log(job, f"[{folder}] Nu găsesc arhiva creată, sar peste.")
+                continue
+            archive = sorted(new_files)[0]
+            src_arch = f"{src_home}/{archive}"
+            dst_arch = f"{dst_home}/{archive}"
+            asize = _ftp_size(src, src_arch) or 0
+            _log(job, f"[{folder}] Arhivă: {archive} ({asize / 1048576:.1f} MB)")
+
+            # 2) download archive
+            job["status"] = "downloading"
+            job["phase"] = "Descărcare arhivă"
+            job["bytes_total"] = asize
+            job["bytes_done"] = 0
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+            try:
+                def dl_cb(data):
+                    tmp.write(data)
+                    job["bytes_done"] = job.get("bytes_done", 0) + len(data)
+                src.retrbinary("RETR " + src_arch, dl_cb, blocksize=1048576)
+                tmp.close()
+
+                # 3) upload archive
+                job["status"] = "uploading"
+                job["phase"] = "Încărcare pe destinație"
+                job["bytes_total"] = asize
+                job["bytes_done"] = 0
+
+                def ul_cb(block):
+                    job["bytes_done"] = job.get("bytes_done", 0) + len(block)
+                with open(tmp.name, "rb") as fh:
+                    dst.storbinary("STOR " + dst_arch, fh, blocksize=1048576, callback=ul_cb)
+            finally:
+                try:
+                    os.unlink(tmp.name)
+                except Exception:
+                    pass
+
+            # 4) extract on destination
+            job["status"] = "extracting"
+            job["phase"] = "Dezarhivare pe destinație"
+            job["bytes_total"] = 0
+            job["bytes_done"] = 0
+            _log(job, f"[{folder}] Dezarhivez pe destinație...")
+            ex = _api2_fileop(dest, "extract", dst_arch, destfiles=dst_home + "/")
+            if not ex.get("ok"):
+                _log(job, f"[{folder}] Dezarhivare eșuată: {ex.get('error')}")
+
+            # 5) cleanup archives
+            for c, p in ((src, src_arch), (dst, dst_arch)):
+                try:
+                    c.delete(p)
+                except Exception:
+                    pass
+            _log(job, f"[{folder}] Gata.")
+            job["folders_done"] = idx + 1
+
+        job["status"] = "done"
+        job["current"] = ""
+        job["phase"] = ""
+        job["duration_ms"] = int((time.time() - job["start_ts"]) * 1000)
+        _log(job, f"Migrare completă: {job['folders_done']}/{len(folders)} foldere în {job['duration_ms'] / 1000:.1f}s.")
+    except Exception as e:
+        job["status"] = "error"
+        job["error"] = _clean(e)
+        if job.get("start_ts"):
+            job["duration_ms"] = int((time.time() - job["start_ts"]) * 1000)
+        _log(job, f"EROARE: {_clean(e)}")
+    finally:
+        job["finished"] = True
+        for c in (src, dst):
+            try:
+                if c:
+                    c.quit()
+            except Exception:
+                pass
+
+
+def start_job(source, dest, folders, method="archive"):
     job_id = uuid.uuid4().hex
     JOBS[job_id] = {
-        "id": job_id, "status": "queued", "total": 0, "done": 0,
-        "total_bytes": 0, "done_bytes": 0, "current": "", "logs": [],
-        "error": None, "finished": False, "cancel": False,
-        "skipped": 0, "duration_ms": 0, "folders": folders,
+        "id": job_id, "status": "queued", "mode": method, "total": 0, "done": 0,
+        "total_bytes": 0, "done_bytes": 0, "bytes_total": 0, "bytes_done": 0,
+        "folders_total": len(folders), "folders_done": 0, "phase": "",
+        "current": "", "logs": [], "error": None, "finished": False,
+        "cancel": False, "skipped": 0, "duration_ms": 0, "folders": folders,
     }
-    t = threading.Thread(target=run_migration, args=(job_id, source, dest, folders), daemon=True)
+    target = run_migration_archive if method == "archive" else run_migration
+    t = threading.Thread(target=target, args=(job_id, source, dest, folders), daemon=True)
     t.start()
     return job_id
 
