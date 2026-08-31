@@ -198,7 +198,7 @@ def run_sync(job_id, source, dest):
                 typ, d = src.select(_quote(f), readonly=True)
                 if typ != "OK":
                     continue
-                typ, sd = src.uid("search", None, "ALL")
+                typ, sd = src.uid("search", None, "NOT", "DELETED")
                 ids = sd[0].split() if sd and sd[0] else []
                 folder_counts[f] = ids
                 total += len(ids)
