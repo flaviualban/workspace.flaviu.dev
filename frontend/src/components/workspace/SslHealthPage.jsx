@@ -97,9 +97,6 @@ const ResultCard = ({ r, i }) => {
           <span className="inline-flex items-center gap-1.5 text-[11px] font-mono bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
             <Clock3 className="w-3 h-3" /> {conn.handshake_ms} ms
           </span>
-          <span className={`inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full ${r.trusted ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-            {r.trusted ? <CheckCircle2 className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />} {r.trusted ? "Lanț valid" : "Lanț neîncrezut"}
-          </span>
         </div>
 
         {r.cert.cipher && (
