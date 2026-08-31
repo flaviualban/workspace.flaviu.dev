@@ -1,0 +1,184 @@
+{
+  "project_overview": {
+    "title": "Flaviu Workspace (workspace.flaviu.dev)",
+    "domain": "https://flaviu.dev",
+    "subdomain": "workspace.flaviu.dev",
+    "type": "saas_app / developer tools workspace / admin panel",
+    "target_user": "Flaviu & System Administrators needing high-efficiency DevOps and server management tools",
+    "key_flow": "1. Key Authentication (20-character access key) -> 2. Telemetry Loading Screen (animated initialization sequence) -> 3. Swiss Minimalist Dashboard Panel with extensible developer tool cards"
+  },
+  "design_archetype": {
+    "name": "Swiss Modern Minimalist (Archetype 4 - High Contrast Authority)",
+    "theme": "Light Mode Primary (Zinc & Crisp Slate with Monospaced Telemetry Details)",
+    "aesthetic_principles": [
+      "Tactile Swiss Precision: High grid density, crisp 1px borders (border-slate-200), zero unnecessary heavy gradients",
+      "Monospace Data Accents: JetBrains Mono for system metrics, domain records, status indicators, and key inputs",
+      "Asymmetric Bento Grid: Feature tool cards laid out in structured, responsive proportions",
+      "Micro-Interactions: Spring physics on card hover, glowing crisp focus states, terminal-style step transitions"
+    ]
+  },
+  "typography": {
+    "primary_font": "Plus Jakarta Sans / DM Sans (Clean Geometric Sans for headers and UI labels)",
+    "mono_font": "JetBrains Mono / Source Code Pro (For 20-char Key Input, DNS Records, Server Paths, and Terminal Output)",
+    "hierarchy": {
+      "brand_title": "text-2xl font-bold tracking-tight text-slate-900 font-mono",
+      "section_heading": "text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight",
+      "tool_card_title": "text-lg font-semibold text-slate-900 flex items-center gap-2",
+      "tool_card_description": "text-sm text-slate-600 leading-relaxed",
+      "body_text": "text-sm text-slate-700",
+      "badge_label": "text-xs font-mono uppercase tracking-widest text-slate-500 font-medium"
+    }
+  },
+  "colors": {
+    "background": "#FAFAFA (Zinc-50) for canvas, #FFFFFF for card surfaces",
+    "text_primary": "#0F172A (Slate-900)",
+    "text_secondary": "#475569 (Slate-600)",
+    "text_muted": "#94A3B8 (Slate-400)",
+    "border_default": "#E2E8F0 (Slate-200)",
+    "border_hover": "#94A3B8 (Slate-400)",
+    "accent_primary": "#0284C7 (Sky-600 - Precision Blue)",
+    "accent_success": "#059669 (Emerald-600 - Active Status)",
+    "accent_warning": "#D97706 (Amber-600 - Pending Operations)",
+    "accent_subtle": "#F1F5F9 (Slate-100 - Key badge and background tints)",
+    "forbidden_colors": [
+      "#7351B7 (Forbidden AI Purple)",
+      "#1B93A4 (Forbidden Teal Blue)",
+      "#000000 (Pure Pitch Black - use slate-900 #0F172A instead)"
+    ]
+  },
+  "auth_and_login_spec": {
+    "page_title": "Flaviu Workspace Access",
+    "subtitle": "Enter your 20-character developer authorization key to unlock workspace utilities",
+    "input_specification": {
+      "length": 20,
+      "format": "5 groups of 4 characters or 20 raw alphanumeric characters (e.g. FLAV-2026-SYNC-DNSX-9821)",
+      "auto_formatter": "Adds hyphens every 4 chars automatically",
+      "default_demo_key": "FLAV-2026-SRV1-SYNC-9X0A",
+      "helper_text": "Demo Key available: FLAV-2026-SRV1-SYNC-9X0A or enter any 20-char key"
+    },
+    "visual_design": "Minimalist centered Swiss card with subtle grid line background, security badge, and instant validation response"
+  },
+  "loading_screen_spec": {
+    "type": "Telemetry Terminal Initialization",
+    "duration_ms": 2200,
+    "stages": [
+      "Verifying cryptographic key checksum...",
+      "Connecting to workspace.flaviu.dev remote agent...",
+      "Loading DNS Zone Lookup module (v2.4)...",
+      "Initializing IMAP Sync Engine & cPanel FTP connector...",
+      "Workspace ready. Mounting workspace dashboard..."
+    ],
+    "visual_elements": "Monospace progress percentage, pulse indicator, diagnostic console output line, sleek progress bar (Sky-600)"
+  },
+  "workspace_dashboard_spec": {
+    "header": {
+      "title": "workspace.flaviu.dev",
+      "status_badge": "SYSTEM OPERATIONAL",
+      "quick_actions": [
+        "Key Settings",
+        "Command Palette (Ctrl+K)",
+        "Lock Workspace"
+      ]
+    },
+    "core_tools": [
+      {
+        "id": "dns-zone-lookup",
+        "title": "DNS Zone Lookup",
+        "romanian_title": "Interogare zonă DNS",
+        "category": "Network & Domain",
+        "status": "Ready",
+        "icon": "Network",
+        "description": "Query live DNS zone records (A, AAAA, MX, CNAME, TXT, NS, SOA) for any domain with TTL diagnostic parsing.",
+        "interactive_preview": "Domain input (e.g., flaviu.dev), record filter toggles, DNS server selector (1.1.1.1, 8.8.8.8), simulated live output table."
+      },
+      {
+        "id": "imap-mail-sync",
+        "title": "IMAP Mail Sync",
+        "romanian_title": "Transfer mailuri între 2 adrese IMAP",
+        "category": "Email Migration",
+        "status": "Ready",
+        "icon": "MailCheck",
+        "description": "Synchronize mailboxes between two IMAP accounts with folder mapping, delta comparison, and sync progress logs.",
+        "interactive_preview": "Source Account Form (Server, Port, User, Pass) -> Destination Account Form -> Dry Run & Sync Execution panel."
+      },
+      {
+        "id": "cpanel-file-migration",
+        "title": "cPanel File Migration",
+        "romanian_title": "Migrarea fișierelor dintr-un cPanel în altul",
+        "category": "Server Migration",
+        "status": "Ready",
+        "icon": "FolderSync",
+        "description": "Automated migration of public_html, MySQL databases, and configuration files between source and destination cPanel instances.",
+        "interactive_preview": "cPanel API / Host credentials form, backup compression selector, migration progress bar, directory preview."
+      },
+      {
+        "id": "ssl-cert-renew",
+        "title": "SSL & Domain Health Monitor",
+        "romanian_title": "Monitorizare SSL & Domenii",
+        "category": "Security",
+        "status": "Extensible Module",
+        "description": "Inspect SSL certificate expiration dates, OCSP stapling status, and HTTP/2 handshake benchmarks.",
+        "interactive_preview": "Domain status cards with expiry countdown bars."
+      },
+      {
+        "id": "database-dumper",
+        "title": "MySQL / PostgreSQL Dump & Restore",
+        "romanian_title": "Export & Import Baze de Date",
+        "category": "Database Utility",
+        "status": "Extensible Module",
+        "description": "One-click compressed database dump generation, remote server restoration, and table structure comparison.",
+        "interactive_preview": "Database connection string input with export format options (.sql.gz, .tar)."
+      },
+      {
+        "id": "custom-script-runner",
+        "title": "Custom Script Executor & Webhooks",
+        "romanian_title": "Rulare Scripturi Personalizate",
+        "category": "Automation",
+        "status": "Extensible Module",
+        "description": "Configure and execute custom Bash/Python server automation scripts directly from your workspace dashboard.",
+        "interactive_preview": "Script selection dropdown with parameter inputs and live console execution output."
+      }
+    ]
+  },
+  "testing_and_data_testids": {
+    "key_login_input": "key-login-input",
+    "key_login_submit_button": "key-login-submit-button",
+    "key_demo_fill_button": "key-demo-fill-button",
+    "loading_screen": "loading-screen",
+    "loading_progress_bar": "loading-progress-bar",
+    "workspace_dashboard": "workspace-dashboard",
+    "workspace_header": "workspace-header",
+    "logout_lock_button": "logout-lock-button",
+    "tool_card_dns_lookup": "tool-card-dns-lookup",
+    "tool_card_imap_sync": "tool-card-imap-sync",
+    "tool_card_cpanel_migrator": "tool-card-cpanel-migrator",
+    "tool_card_ssl_monitor": "tool-card-ssl-monitor",
+    "tool_card_database_dumper": "tool-card-database-dumper",
+    "tool_card_custom_script": "tool-card-custom-script",
+    "dns_lookup_modal": "dns-lookup-modal",
+    "imap_sync_modal": "imap-sync-modal",
+    "cpanel_migration_modal": "cpanel-migration-modal"
+  },
+  "instructions_to_main_agent": [
+    "Build the multi-state React application inside /app/frontend/src/App.js (or modular components under /app/frontend/src/components/).",
+    "Implement 3 distinct visual states: State 1 = Key Authorization Page (20-char key validation + demo key auto-fill), State 2 = Telemetry Loading Screen (2-second high precision progress animation), State 3 = Full Swiss Panel Dashboard.",
+    "Include fully interactive detail drawers or modal dialogs for each of the 3 primary tools ('DNS Zone Lookup', 'IMAP Mail Sync', 'cPanel File Migration') allowing the user to experience real UI workflows.",
+    "Add a Command Palette (Ctrl+K or button) that allows quick searching through tools and running quick actions.",
+    "Add a toggle or indicator for workspace session key status (e.g. 'Session active: Key FLAV-2026-****').",
+    "Use Lucide-react icons for tool categories and indicators.",
+    "Ensure all buttons and inputs have precise data-testid attributes specified in testing_and_data_testids.",
+    "Maintain the Swiss Minimalist Light Theme: clear high contrast, subtle borders, whitespace padding (p-6, p-8), no heavy dark gradients."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic outputs. In frontend design, this creates what users call the AI slop aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "You MUST NOT apply universal transition. Eg: transition: all. Always add transitions for specific interactive elements like button, input.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file.",
+    "Always use modern button styles like pill-shaped, or sharp Swiss rectangular buttons with subtle hover state transitions.",
+    "NEVER use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 for icons. Use lucide-react icons instead.",
+    "Use 2-3x more spacing than feels comfortable (p-6, p-8). Cramped designs look cheap.",
+    "Every interactive element MUST include data-testid attribute in kebab-case."
+  ]
+}
