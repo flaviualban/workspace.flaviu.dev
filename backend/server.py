@@ -13,6 +13,8 @@ from dns_tool import analyze as dns_analyze
 import imap_tool
 import cpanel_tool
 import ssl_tool
+import whois_tool
+import uptime_tool
 
 
 ROOT_DIR = Path(__file__).parent
@@ -168,6 +170,62 @@ async def ssl_check(payload: SslCheckRequest):
     tasks = [loop.run_in_executor(_executor, ssl_tool.check_domain, d) for d in domains]
     results = await asyncio.gather(*tasks)
     return {"results": results}
+
+
+class WhoisRequest(BaseModel):
+    domains: list[str]
+
+
+@api_router.post("/tools/whois")
+async def whois_lookup(payload: WhoisRequest):
+    domains = [d for d in (payload.domains or []) if d.strip()][:20]
+    if not domains:
+        return {"results": []}
+    loop = asyncio.get_event_loop()
+    tasks = [loop.run_in_executor(_executor, whois_tool.lookup, d) for d in domains]
+    results = await asyncio.gather(*tasks)
+    return {"results": results}
+
+
+class UptimeAddRequest(BaseModel):
+    url: str
+    name: str | None = None
+
+
+class UptimeSyncRequest(BaseModel):
+    targets: list[dict] = []
+
+
+@api_router.get("/tools/uptime/monitors")
+async def uptime_list():
+    return {"monitors": uptime_tool.list_monitors()}
+
+
+@api_router.post("/tools/uptime/monitors")
+async def uptime_add(payload: UptimeAddRequest):
+    mon = uptime_tool.add_monitor(payload.url, payload.name)
+    if not mon:
+        return {"error": "URL invalid."}
+    return {"monitor": mon}
+
+
+@api_router.delete("/tools/uptime/monitors/{mid}")
+async def uptime_remove(mid: str):
+    return {"removed": uptime_tool.remove_monitor(mid)}
+
+
+@api_router.post("/tools/uptime/check")
+async def uptime_check(mid: str | None = None):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(_executor, uptime_tool.check_now, mid)
+    return {"monitors": uptime_tool.list_monitors()}
+
+
+@api_router.post("/tools/uptime/sync")
+async def uptime_sync(payload: UptimeSyncRequest):
+    loop = asyncio.get_event_loop()
+    monitors = await loop.run_in_executor(_executor, uptime_tool.sync, payload.targets)
+    return {"monitors": monitors}
 
 
 # Include the router in the main app

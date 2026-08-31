@@ -8,6 +8,8 @@ import { DnsLookupPage } from "@/components/workspace/DnsLookupPage";
 import { ImapSyncPage } from "@/components/workspace/ImapSyncPage";
 import { CpanelMigratePage } from "@/components/workspace/CpanelMigratePage";
 import { SslHealthPage } from "@/components/workspace/SslHealthPage";
+import { UptimeMonitorPage } from "@/components/workspace/UptimeMonitorPage";
+import { WhoisPage } from "@/components/workspace/WhoisPage";
 
 const STORAGE_KEY = "flaviu_workspace_key";
 
@@ -39,6 +41,8 @@ function App() {
           <Route path="/tools/imap" element={<ImapSyncPage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="/tools/cpanel" element={<CpanelMigratePage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="/tools/ssl" element={<SslHealthPage sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="/tools/uptime" element={<UptimeMonitorPage sessionKey={sessionKey} onLock={handleLock} />} />
+          <Route path="/tools/whois" element={<WhoisPage sessionKey={sessionKey} onLock={handleLock} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

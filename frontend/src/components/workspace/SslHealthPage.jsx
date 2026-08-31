@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import {
   ArrowLeft, Lock, ShieldCheck, ShieldAlert, ShieldX, Search, Loader2,
-  Calendar, KeyRound, Zap, Clock3, Server, Globe, CheckCircle2, XCircle,
+  Calendar, KeyRound, Zap, Clock3, Globe, XCircle,
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

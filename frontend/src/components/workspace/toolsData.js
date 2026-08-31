@@ -1,4 +1,4 @@
-import { Network, MailCheck, FolderSync, ShieldCheck, Database, TerminalSquare } from "lucide-react";
+import { Network, MailCheck, FolderSync, ShieldCheck, Activity, CalendarClock } from "lucide-react";
 
 export const TOOLS = [
   {
@@ -50,25 +50,27 @@ export const TOOLS = [
       "Inspectează expirarea certificatelor SSL, statusul OCSP stapling și benchmark-uri handshake HTTP/2.",
   },
   {
-    id: "database-dumper",
-    testId: "tool-card-database-dumper",
-    title: "DB Dump & Restore",
-    romanianTitle: "Export & Import Baze de Date",
-    category: "Database Utility",
-    status: "Soon",
-    icon: Database,
+    id: "uptime-monitor",
+    testId: "tool-card-uptime-monitor",
+    title: "Uptime Monitor",
+    romanianTitle: "Uptime & Response Monitor",
+    category: "Availability",
+    status: "Ready",
+    icon: Activity,
+    route: "/tools/uptime",
     description:
-      "Generare dump comprimat cu un click, restaurare pe server remote și comparație structură tabele.",
+      "Verificare HTTP(S) automată în fundal, la fiecare 5 minute, cu istoric, timp de răspuns și alertă vizuală la cădere.",
   },
   {
-    id: "custom-script-runner",
-    testId: "tool-card-custom-script",
-    title: "Script Executor",
-    romanianTitle: "Rulare Scripturi Personalizate",
-    category: "Automation",
-    status: "Soon",
-    icon: TerminalSquare,
+    id: "whois-expiry",
+    testId: "tool-card-whois-expiry",
+    title: "WHOIS / Domain Expiry",
+    romanianTitle: "Expirare domenii & registrar",
+    category: "Domain Registry",
+    status: "Ready",
+    icon: CalendarClock,
+    route: "/tools/whois",
     description:
-      "Configurează și rulează scripturi Bash/Python de automatizare direct din workspace, cu output live.",
+      "Data de expirare a domeniului, registrarul și nameserverele, cu alertă vizuală când expirarea se apropie.",
   },
 ];
