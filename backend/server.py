@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from dns_tool import analyze as dns_analyze
 import imap_tool
+import cpanel_tool
 
 
 ROOT_DIR = Path(__file__).parent
@@ -109,6 +110,47 @@ async def imap_status(job_id: str):
 @api_router.post("/tools/imap/cancel/{job_id}")
 async def imap_cancel(job_id: str):
     return {"cancelled": imap_tool.cancel_job(job_id)}
+
+
+class CpanelAccount(BaseModel):
+    host: str
+    port: int = 21
+    user: str
+    password: str
+    tls: bool = False
+
+
+class CpanelStartRequest(BaseModel):
+    source: CpanelAccount
+    dest: CpanelAccount
+    folders: list[str]
+
+
+@api_router.post("/tools/cpanel/scan")
+async def cpanel_scan(account: CpanelAccount):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(_executor, cpanel_tool.scan, account.model_dump())
+
+
+@api_router.post("/tools/cpanel/start")
+async def cpanel_start(payload: CpanelStartRequest):
+    if not payload.folders:
+        return {"error": "Selectează cel puțin un folder."}
+    job_id = cpanel_tool.start_job(payload.source.model_dump(), payload.dest.model_dump(), payload.folders)
+    return {"job_id": job_id}
+
+
+@api_router.get("/tools/cpanel/status/{job_id}")
+async def cpanel_status(job_id: str):
+    job = cpanel_tool.get_status(job_id)
+    if not job:
+        return {"error": "Job inexistent."}
+    return {k: v for k, v in job.items() if k != "cancel"}
+
+
+@api_router.post("/tools/cpanel/cancel/{job_id}")
+async def cpanel_cancel(job_id: str):
+    return {"cancelled": cpanel_tool.cancel_job(job_id)}
 
 
 # Include the router in the main app

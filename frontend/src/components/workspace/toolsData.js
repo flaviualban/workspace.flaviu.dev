@@ -33,6 +33,7 @@ export const TOOLS = [
     category: "Server Migration",
     status: "Ready",
     icon: FolderSync,
+    route: "/tools/cpanel",
     description:
       "Migrare automată a public_html, bazelor de date MySQL și fișierelor de configurare între două instanțe cPanel.",
   },
