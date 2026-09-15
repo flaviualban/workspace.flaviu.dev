@@ -154,7 +154,7 @@ export const WhoisPage = ({ onLock }) => {
                         <div className="flex items-center justify-between text-xs mb-2">
                           <span className="font-mono text-slate-500">Expiră</span>
                           <span className={`font-mono font-semibold ${meta.cls}`} data-testid={`whois-days-${d}`}>
-                            {days == null ? "—" : days < 0 ? `expirat de ${-days} zile` : `în ${days} zile`}
+                            {days == null ? "indisponibil" : days < 0 ? `expirat de ${-days} zile` : `în ${days} zile`}
                           </span>
                         </div>
                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-4">
@@ -187,6 +187,9 @@ export const WhoisPage = ({ onLock }) => {
                               ))}
                             </div>
                           </div>
+                        )}
+                        {r.note && (
+                          <p className="text-[11px] text-amber-600 mt-3 leading-relaxed">{r.note}</p>
                         )}
                       </>
                     )}
